@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Slackログ収集 セットアップ</title>
+</head>
+<body style="font-family:sans-serif;text-align:center;margin-top:48px;color:#222">
+  <!--
+    Slackログ収集（部下版）の OAuth 中継ページ。
+    Slack は http://localhost を redirect_uri に使えないため、この HTTPS ページが
+    受け取った認証コードを、本人PCで動くセットアップ（http://localhost:<port>）へ転送する。
+    このページは「コードを渡すだけ」。トークン交換（秘密の使用）は本人PC内で行うので、
+    ここに秘密情報は一切流れない（公開ページで安全）。
+  -->
+  <h2>認証情報を受け取りました</h2>
+  <p id="msg">セットアップ画面に戻しています…</p>
+  <p id="manual" style="display:none">
+    自動で戻らない場合は、下のコードをコピーして、セットアップ画面の「コードを貼り付け」に入れてください：<br>
+    <code id="code" style="font-size:18px;background:#eee;padding:6px 10px;display:inline-block;margin-top:8px"></code>
+  </p>
+  <script>
+    (function () {
+      var p = new URLSearchParams(location.search);
+      var code = p.get("code"), state = p.get("state"), err = p.get("error");
+      var msg = document.getElementById("msg");
+      if (err) { msg.textContent = "認証が拒否されました: " + err; return; }
+      if (!code || !state) { msg.textContent = "情報が不足しています。最初からやり直してください。"; return; }
+      document.getElementById("code").textContent = code;
+      var port = state.split(".").pop();   // state = "<ランダム>.<ポート>"
+      if (/^\d+$/.test(port)) {
+        var url = "http://localhost:" + port + "/callback?code=" +
+                  encodeURIComponent(code) + "&state=" + encodeURIComponent(state);
+        // 自動転送がうまくいかない環境向けに、少し待って手動コードも出す
+        setTimeout(function () { document.getElementById("manual").style.display = "block"; }, 2500);
+        location.replace(url);
+      } else {
+        msg.textContent = "セットアップ画面に、下のコードを貼り付けてください。";
+        document.getElementById("manual").style.display = "block";
+      }
+    })();
+  </script>
+</body>
+</html>
