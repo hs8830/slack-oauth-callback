@@ -1,0 +1,7 @@
+
+# 全repo点検（R2・R6）＝手元だけの置き場・並行の作業場・秘密を載せない
+local/
+.claude/worktrees/
+.env
+*.key
+*.pem
